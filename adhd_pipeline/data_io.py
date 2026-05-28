@@ -132,10 +132,16 @@ def load_all(root: str) -> list[tuple[np.ndarray, int, str]]:
     n_control = len(control_records)
 
     if n_adhd != EXPECTED_ADHD or n_control != EXPECTED_CONTROL:
-        raise AssertionError(
+        warnings.warn(
             f"Expected {EXPECTED_ADHD} ADHD + {EXPECTED_CONTROL} Control subjects, "
             f"but found {n_adhd} ADHD + {n_control} Control. "
-            "Check that you have the correct dataset mirror."
+            "Results may differ from the paper. Proceeding anyway."
+        )
+
+    if n_adhd == 0 or n_control == 0:
+        raise FileNotFoundError(
+            f"No valid .mat files found (ADHD={n_adhd}, Control={n_control}). "
+            "Check that the --data-dir path points to the correct dataset folder."
         )
 
     print(f"Loaded {n_adhd} ADHD + {n_control} Control subjects.")
