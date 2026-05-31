@@ -5,6 +5,9 @@ from scipy.signal import welch
 
 from . import config
 
+# _trapz was removed in NumPy 2.0; np.trapezoid added in 2.0
+_trapz = getattr(np, "trapezoid", _trapz)
+
 BAND_NAMES = list(config.BANDS.keys())   # fixed order for column mapping
 N_BANDS    = len(BAND_NAMES)
 
@@ -14,14 +17,14 @@ def _relative_bandpower(psd: np.ndarray, freqs: np.ndarray) -> np.ndarray:
     Given a PSD (n_freqs,) and matching frequency axis, return relative power
     in each of the five bands (shape: N_BANDS,).
     """
-    total = np.trapz(psd, freqs)
+    total = _trapz(psd, freqs)
     if total == 0:
         return np.zeros(N_BANDS, dtype=np.float32)
     powers = np.empty(N_BANDS, dtype=np.float32)
     for i, band in enumerate(BAND_NAMES):
         lo, hi = config.BANDS[band]
         mask = (freqs >= lo) & (freqs <= hi)
-        powers[i] = np.trapz(psd[mask], freqs[mask]) / total
+        powers[i] = _trapz(psd[mask], freqs[mask]) / total
     return powers
 
 
