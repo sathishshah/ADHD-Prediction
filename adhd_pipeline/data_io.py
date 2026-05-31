@@ -56,6 +56,13 @@ def discover_dataset(root: str) -> tuple[Path, Path]:
             "Expected folder names containing 'adhd' and 'control'."
         )
 
+    # /kaggle/input is read-only — consolidate into a writable working directory.
+    if not os.access(root, os.W_OK):
+        work_dir       = Path("/kaggle/working/adhd_consolidated")
+        adhd_target    = work_dir / "ADHD"
+        control_target = work_dir / "Control"
+        print(f"  Root is read-only; consolidating into {work_dir}")
+
     _consolidate(adhd_dirs,    adhd_target)
     _consolidate(control_dirs, control_target)
     return adhd_target, control_target
