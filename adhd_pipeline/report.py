@@ -106,7 +106,7 @@ def write_results(
         rn("FP",      str(cm[1][0])),
         rn("TN",      str(cm[1][1])),
         rn("Params",  f"{all_results.get('params', 0):.2f}"),
-        rn("TrainMin",str(int(timing.get("train_min", 0)))),
+        rn("TrainMin",f"{timing.get('train_min', 0):.1f}"),
         rn("InferMs", str(int(timing.get("infer_ms", 0)))),
     ]
 

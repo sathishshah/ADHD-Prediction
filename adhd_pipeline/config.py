@@ -17,9 +17,9 @@ BANDS = {
     "gamma": (30, 50),
 }
 K_FOLDS     = 10
-DL_EPOCHS   = 60
-DL_BATCH    = 64
+DL_EPOCHS   = 100
+DL_BATCH    = 32
 DL_LR       = 1e-3
-DL_PATIENCE = 10
+DL_PATIENCE = 25
 DL_DROPOUT  = 0.3
 RANDOM_SEED = 42

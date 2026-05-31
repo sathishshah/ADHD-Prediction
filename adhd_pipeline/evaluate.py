@@ -9,6 +9,7 @@ from sklearn.metrics import (
     accuracy_score, precision_score, recall_score,
     f1_score, roc_auc_score,
 )
+from sklearn.utils.class_weight import compute_class_weight
 import tensorflow as tf
 
 from . import config
@@ -18,13 +19,18 @@ SplitList = list[tuple[np.ndarray, np.ndarray]]
 
 
 def score(y_true: np.ndarray, y_pred: np.ndarray, y_prob: np.ndarray) -> dict:
-    """Return accuracy (%), precision, recall, F1, ROC-AUC."""
+    """Return accuracy (%), precision, recall, F1, ROC-AUC.
+    roc_auc is NaN for single-class test folds (e.g. LOSO)."""
+    try:
+        roc_auc = roc_auc_score(y_true, y_prob)
+    except ValueError:
+        roc_auc = float("nan")
     return {
         "accuracy":  accuracy_score(y_true, y_pred) * 100,
         "precision": precision_score(y_true, y_pred, zero_division=0),
         "recall":    recall_score(y_true, y_pred, zero_division=0),
         "f1":        f1_score(y_true, y_pred, zero_division=0),
-        "roc_auc":   roc_auc_score(y_true, y_prob),
+        "roc_auc":   roc_auc,
     }
 
 
@@ -72,9 +78,16 @@ def evaluate_deep(
         patience=config.DL_PATIENCE,
         restore_best_weights=True,
     )
+    reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
+        monitor="val_loss", factor=0.5, patience=8, min_lr=1e-6, verbose=0,
+    )
 
     for fold_idx, (tr, te) in enumerate(splits):
         X_tr, X_te = zscore_train_only(X[tr], X[te])
+
+        classes = np.unique(y[tr])
+        cw = compute_class_weight("balanced", classes=classes, y=y[tr])
+        class_weight_dict = dict(zip(classes.tolist(), cw.tolist()))
 
         model = builder()
 
@@ -84,7 +97,8 @@ def evaluate_deep(
             epochs=config.DL_EPOCHS,
             batch_size=config.DL_BATCH,
             validation_split=0.15,
-            callbacks=[early_stop],
+            callbacks=[early_stop, reduce_lr],
+            class_weight=class_weight_dict,
             verbose=0,
         )
         train_times.append(time.time() - t0)
@@ -112,7 +126,7 @@ def summarise(fold_scores: list[dict]) -> dict:
     summary = {}
     for m in metrics:
         vals = np.array([s[m] for s in fold_scores])
-        summary[m] = (float(vals.mean()), float(vals.std()))
+        summary[m] = (float(np.nanmean(vals)), float(np.nanstd(vals)))
     return summary
 
 

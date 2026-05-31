@@ -240,7 +240,7 @@ def main():
 
     if "protocol_b" in all_results and "CNN_BiLSTM" in all_results["protocol_b"]:
         fold_scores_b = all_results["protocol_b"]["CNN_BiLSTM"]["fold_scores"]
-        train_sec = np.mean([s.get("train_sec", 0) for s in fold_scores_b])
+        train_sec = np.sum([s.get("train_sec", 0) for s in fold_scores_b])
         all_results["timing"] = {
             "train_min": train_sec / 60,
             "infer_ms":  0,   # updated below
