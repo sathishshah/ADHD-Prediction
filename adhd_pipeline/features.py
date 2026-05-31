@@ -5,8 +5,8 @@ from scipy.signal import welch
 
 from . import config
 
-# _trapz was removed in NumPy 2.0; np.trapezoid added in 2.0
-_trapz = getattr(np, "trapezoid", _trapz)
+# np.trapz removed in NumPy 2.0; np.trapezoid added in 2.0
+_trapz = getattr(np, "trapezoid", getattr(np, "trapz", None))
 
 BAND_NAMES = list(config.BANDS.keys())   # fixed order for column mapping
 N_BANDS    = len(BAND_NAMES)
